@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0B1B20">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nexus">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icono-32.png">
+<link rel="apple-touch-icon" href="icono-180.png">
+<title>Nexus · Centro de mando</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --noche: #0B1B20;      /* fondo */
+    --capa: #10262C;       /* superficies */
+    --capa2: #163239;      /* superficies elevadas */
+    --hilo: #24454D;       /* líneas */
+    --papel: #EAF2EF;      /* texto */
+    --niebla: #8FA8A4;     /* texto secundario */
+    --jade: #4FCAA5;       /* lo que va bien */
+    --oro: #E7B95B;        /* objetivos y Emmanuel */
+    --lila: #AE9CFF;       /* Aray */
+    --coral: #F08A78;      /* lo que hay que arreglar */
+    --titulo: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --texto: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--noche); color: var(--papel); font: 16px/1.5 var(--texto); }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; border: 0; background: none; }
+  :focus-visible { outline: 2px solid var(--oro); outline-offset: 3px; border-radius: 6px; }
+  .oculto { display: none !important; }
+  .app { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100vh; }
+
+  /* ---------- Menú ---------- */
+  nav { position: sticky; top: 0; height: 100vh; padding: 26px 14px; border-right: 1px solid var(--hilo); display: flex; flex-direction: column; gap: 2px; }
+  .sello { display: flex; align-items: center; gap: 11px; padding: 0 10px 26px; }
+  .sello svg { flex: none; }
+  .sello b { font: 800 22px/1 var(--titulo); letter-spacing: -.02em; }
+  nav button { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: var(--niebla); font-weight: 600; font-size: 15px; text-align: left; position: relative; }
+  nav button:hover { color: var(--papel); background: var(--capa); }
+  nav button[aria-current="page"] { color: var(--papel); background: var(--capa2); }
+  nav button[aria-current="page"]::before { content: ""; position: absolute; left: -14px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--oro); }
+  nav svg.i { width: 19px; height: 19px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  main { padding: 34px clamp(16px, 4vw, 52px) 110px; max-width: 1120px; width: 100%; }
+  .cabeza { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
+  h1 { font: 800 clamp(30px, 4.2vw, 44px)/1.04 var(--titulo); letter-spacing: -.03em; margin: 0; }
+  .cabeza p { margin: 8px 0 0; color: var(--niebla); max-width: 56ch; }
+  .pie-boceto { margin-top: 60px; font-size: 13px; color: var(--niebla); }
+  .nota-boceto { font-size: 13px; color: var(--niebla); border: 1px dashed var(--hilo); padding: 5px 10px; border-radius: 999px; }
+  h2 { font: 700 19px/1.2 var(--titulo); letter-spacing: -.01em; margin: 38px 0 14px; }
+  .sub { color: var(--niebla); font-size: 14px; }
+
+  /* ---------- Línea de rumbo (lo memorable) ---------- */
+  .rumbo { position: relative; border-radius: 22px; padding: 28px 28px 26px; background: var(--capa); border: 1px solid var(--hilo); overflow: hidden; }
+  .rumbo .meta-mes { font: 700 clamp(22px, 2.8vw, 30px)/1.15 var(--titulo); letter-spacing: -.02em; margin: 2px 0 6px; max-width: 24ch; }
+  .rumbo .que { color: var(--niebla); margin: 0; }
+  .camino { position: relative; margin-top: 30px; height: 120px; }
+  .camino svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .camino .base { stroke: var(--hilo); stroke-width: 2; fill: none; stroke-dasharray: 2 7; stroke-linecap: round; }
+  .camino .hecho { stroke: var(--jade); stroke-width: 3; fill: none; stroke-linecap: round; stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: trazar 1.6s .2s cubic-bezier(.6,.05,.25,1) forwards; }
+  @keyframes trazar { to { stroke-dashoffset: 0; } }
+  .nodos { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, 1fr); }
+  .nodo { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .nodo i { width: 16px; height: 16px; border-radius: 50%; background: var(--noche); border: 2px solid var(--hilo); margin-top: 52px; }
+  .nodo.ya i { background: var(--jade); border-color: var(--jade); }
+  .nodo.aqui i { width: 22px; height: 22px; margin-top: 49px; background: var(--oro); border-color: var(--oro); }
+  .nodo .cuando { position: absolute; top: 0; font-size: 13px; color: var(--niebla); white-space: nowrap; }
+  .nodo b { margin-top: 10px; font-size: 14px; line-height: 1.25; max-width: 15ch; }
+  .nodo.aqui b { color: var(--oro); }
+  .rumbo .acciones { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+
+  .boton { display: inline-flex; align-items: center; gap: 8px; background: var(--oro); color: #22180A; font-weight: 700; padding: 11px 18px; border-radius: 12px; }
+  .boton:hover { filter: brightness(1.06); }
+  .boton.suave { background: transparent; color: var(--papel); box-shadow: inset 0 0 0 1px var(--hilo); }
+  .boton.suave:hover { background: var(--capa2); }
+
+  /* ---------- Marcador (fila, no tarjetas) ---------- */
+  .marcador { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 18px; border-top: 1px solid var(--hilo); border-bottom: 1px solid var(--hilo); }
+  .marcador > div { padding: 18px 18px 18px 0; }
+  .marcador > div + div { padding-left: 18px; border-left: 1px solid var(--hilo); }
+  .num { font: 700 38px/1 var(--titulo); letter-spacing: -.03em; }
+  .num small { font-size: 17px; color: var(--niebla); font-weight: 500; margin-left: 3px; }
+  .marcador p { margin: 6px 0 0; font-size: 14px; color: var(--niebla); }
+  .marcador .que-es { font-size: 14px; color: var(--papel); font-weight: 600; margin-bottom: 8px; }
+  .progreso { height: 4px; border-radius: 2px; background: var(--hilo); margin-top: 10px; overflow: hidden; }
+  .progreso i { display: block; height: 100%; background: var(--jade); border-radius: 2px; }
+
+  .dos { display: grid; grid-template-columns: 1.35fr 1fr; gap: 34px; }
+  .lista { display: flex; flex-direction: column; }
+  .fila { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--hilo); }
+  .fila:first-child { border-top: 1px solid var(--hilo); }
+  .fila .q { flex: 1; min-width: 0; }
+  .fila .q b { display: block; font-weight: 600; }
+  .fila .q span { display: block; color: var(--niebla); font-size: 14px; margin-top: 2px; }
+  .socio { font-weight: 700; font-size: 14px; flex: none; min-width: 74px; }
+  .s-e { color: var(--oro); }
+  .s-a { color: var(--lila); }
+  .estado { font-size: 14px; font-weight: 600; white-space: nowrap; }
+  .e-jade { color: var(--jade); }
+  .e-oro { color: var(--oro); }
+  .e-lila { color: var(--lila); }
+  .e-coral { color: var(--coral); }
+  .e-niebla { color: var(--niebla); }
+
+  .panel { background: var(--capa); border: 1px solid var(--hilo); border-radius: 16px; padding: 20px; }
+  .panel h3 { font: 700 20px/1.2 var(--titulo); margin: 4px 0 6px; }
+  .panel p { margin: 0; color: var(--niebla); }
+  .decision { margin-top: 16px; padding-left: 14px; border-left: 2px solid var(--oro); }
+  .decision b { display: block; }
+  .decision span { color: var(--niebla); font-size: 14px; }
+
+  /* ---------- Objetivos ---------- */
+  .plazos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--hilo); border-radius: 18px; overflow: hidden; }
+  .plazo { padding: 24px 22px; background: var(--capa); }
+  .plazo + .plazo { border-left: 1px solid var(--hilo); }
+  .plazo .cuando { font-size: 14px; font-weight: 600; }
+  .plazo h3 { font: 700 22px/1.15 var(--titulo); letter-spacing: -.02em; margin: 10px 0 8px; }
+  .plazo p { margin: 0; color: var(--niebla); font-size: 15px; }
+  .plazo ul { list-style: none; margin: 18px 0 0; padding: 0; }
+  .plazo li { padding: 8px 0 8px 26px; position: relative; font-size: 15px; border-top: 1px solid var(--hilo); }
+  .plazo li::before { content: ""; position: absolute; left: 2px; top: 14px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--hilo); }
+  .plazo li.ok::before { background: var(--jade); border-color: var(--jade); }
+  .largo .cuando { color: var(--lila); }
+  .medio .cuando { color: var(--oro); }
+  .corto .cuando { color: var(--jade); }
+  .regla { margin-top: 18px; color: var(--niebla); max-width: 70ch; }
+  .regla b { color: var(--papel); }
+
+  /* ---------- Tareas ---------- */
+  .tablero { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .col h3 { font: 700 17px/1 var(--titulo); margin: 0 0 12px; display: flex; align-items: baseline; gap: 8px; }
+  .col h3 small { font: 500 14px var(--texto); color: var(--niebla); }
+  .ficha { display: flex; flex-direction: column; gap: 4px; background: var(--capa); border: 1px solid var(--hilo); border-radius: 12px; padding: 13px; margin-bottom: 10px; }
+  .ficha b { display: block; font-weight: 600; font-size: 15px; line-height: 1.3; }
+  .ficha span { display: block; font-size: 13px; color: var(--niebla); margin-top: 3px; }
+  .col.hecho .ficha { opacity: .62; }
+  .col.hecho .ficha b { text-decoration: line-through; text-decoration-color: var(--niebla); }
+  .aviso-limite { font-size: 14px; color: var(--oro); margin: 4px 0 0; }
+
+  /* ---------- Dinero ---------- */
+  .cuentas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--hilo); border-bottom: 1px solid var(--hilo); }
+  .cuentas > div { padding: 18px 18px 18px 0; }
+  .cuentas > div + div { padding-left: 18px; border-left: 1px solid var(--hilo); }
+  .verde { color: var(--jade); }
+  .rojo { color: var(--coral); }
+  .reparto { display: flex; height: 54px; border-radius: 12px; overflow: hidden; margin-top: 16px; gap: 3px; }
+  .reparto div { display: flex; flex-direction: column; justify-content: center; padding: 0 14px; color: #0B1B20; font-weight: 700; font-size: 14px; line-height: 1.2; min-width: 0; }
+  .reparto small { font-weight: 500; opacity: .8; }
+  .mov { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--hilo); }
+  .mov:first-child { border-top: 1px solid var(--hilo); }
+  .mov .f { color: var(--niebla); font-size: 14px; }
+  .mov span small { display: block; color: var(--niebla); font-size: 13px; margin-top: 2px; }
+  .mov .cant { font: 700 18px var(--titulo); }
+
+  /* ---------- Quejas ---------- */
+  .apuntar { display: flex; gap: 10px; margin-bottom: 22px; }
+  .apuntar input { flex: 1; min-width: 0; background: var(--capa); border: 1px solid var(--hilo); border-radius: 12px; padding: 13px 15px; }
+  .apuntar input::placeholder { color: var(--niebla); }
+  .quejas { columns: 2 300px; column-gap: 16px; }
+  .queja { break-inside: avoid; margin: 0 0 16px; padding: 18px 20px; background: var(--capa); border: 1px solid var(--hilo); border-radius: 16px; }
+  .queja blockquote { margin: 0 0 12px; font: 600 19px/1.35 var(--titulo); letter-spacing: -.01em; }
+  .queja blockquote::before { content: "«"; }
+  .queja blockquote::after { content: "»"; }
+  .queja .pie { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--niebla); }
+  .queja .pie .socio { min-width: 0; }
+
+  /* ---------- Ideas ---------- */
+  .idea { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--hilo); }
+  .idea:first-child { border-top: 1px solid var(--hilo); }
+  .idea b { font: 700 18px/1.2 var(--titulo); }
+  .idea span { display: block; color: var(--niebla); font-size: 14px; margin-top: 3px; }
+  .nota { text-align: right; font: 700 22px/1 var(--titulo); }
+  .nota small { display: block; font: 500 13px var(--texto); color: var(--niebla); margin-top: 4px; }
+
+  /* ---------- Reunión ---------- */
+  .orden { counter-reset: paso; }
+  .paso { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--hilo); }
+  .paso:first-child { border-top: 1px solid var(--hilo); }
+  .paso .n { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font: 700 15px var(--titulo); box-shadow: inset 0 0 0 1.5px var(--hilo); color: var(--niebla); }
+  .paso.hecho .n { background: var(--jade); color: #0B1B20; box-shadow: none; }
+  .paso.ahora b { color: var(--oro); }
+  .paso.ahora .n { background: var(--oro); color: #22180A; box-shadow: none; }
+  .paso b { font-weight: 600; }
+  .paso span { display: block; color: var(--niebla); font-size: 14px; }
+  .paso .min { font-size: 14px; color: var(--niebla); }
+
+  /* ---------- Legal ---------- */
+  .luz { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+
+  /* ---------- Móvil ---------- */
+  @media (max-width: 880px) {
+    .app { grid-template-columns: 1fr; }
+    nav { position: fixed; z-index: 10; left: 0; right: 0; bottom: 0; top: auto; height: auto; flex-direction: row; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); border-right: 0; border-top: 1px solid var(--hilo); background: rgba(11,27,32,.94); backdrop-filter: blur(10px); overflow-x: auto; }
+    nav .sello { display: none; }
+    nav button { flex-direction: column; gap: 3px; font-size: 11px; padding: 7px 9px; min-width: 62px; }
+    nav button[aria-current="page"]::before { left: 18px; right: 18px; top: -6px; bottom: auto; width: auto; height: 3px; border-radius: 0 0 3px 3px; }
+    main { padding-top: 22px; }
+    .dos, .plazos, .tablero { grid-template-columns: 1fr; }
+    .plazo + .plazo { border-left: 0; border-top: 1px solid var(--hilo); }
+    .marcador, .cuentas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .marcador > div:nth-child(3) { border-left: 0; padding-left: 0; }
+    .marcador > div:nth-child(n+3) { border-top: 1px solid var(--hilo); }
+    .cuentas > div:nth-child(3) { grid-column: 1 / -1; border-left: 0; padding-left: 0; border-top: 1px solid var(--hilo); }
+    .rumbo { padding: 22px 18px; }
+    .nodo b { font-size: 12px; }
+    .nodo .cuando { font-size: 11px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .camino .hecho { animation: none; stroke-dashoffset: 0; } }
+  /* ---------- Lo nuevo de la web de verdad ---------- */
+  .entrada { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+  .entrada .caja { width: 100%; max-width: 380px; }
+  .entrada .sello { padding: 0 0 30px; }
+  .entrada h1 { font-size: 34px; margin-bottom: 8px; }
+  .entrada p { color: var(--niebla); margin: 0 0 22px; }
+  .elegir { display: grid; gap: 10px; }
+  .elegir button { text-align: left; padding: 16px 18px; border-radius: 14px; background: var(--capa); border: 1px solid var(--hilo); }
+  .elegir button:hover { background: var(--capa2); }
+  .elegir b { display: block; font: 700 18px var(--titulo); }
+  .elegir span { color: var(--niebla); font-size: 14px; }
+  label.campo { display: block; margin-bottom: 14px; }
+  label.campo > span { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  label.campo > small { display: block; color: var(--niebla); font-size: 13px; margin-top: 4px; }
+  input.texto, select.texto, textarea.texto { width: 100%; background: var(--noche); border: 1px solid var(--hilo); border-radius: 11px; padding: 12px 13px; color: var(--papel); font: inherit; }
+  textarea.texto { min-height: 92px; resize: vertical; }
+  .error { color: var(--coral); font-size: 14px; min-height: 20px; margin: 4px 0 10px; }
+  .enlace { color: var(--niebla); font-size: 14px; text-decoration: underline; padding: 8px 0; }
+  .vacio { padding: 22px; border: 1px dashed var(--hilo); border-radius: 14px; color: var(--niebla); }
+  .vacio .boton { margin-top: 12px; }
+  .barra-acc { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: -6px 0 18px; }
+  .clic { cursor: pointer; }
+  .clic:hover b { text-decoration: underline; text-decoration-color: var(--hilo); text-underline-offset: 3px; }
+  .boton.peq { padding: 8px 13px; font-size: 14px; }
+  .acciones-fila { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  dialog { background: var(--capa); color: var(--papel); border: 1px solid var(--hilo); border-radius: 18px; padding: 0; width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 40px); }
+  dialog::backdrop { background: rgba(5,12,14,.7); }
+  dialog form { padding: 22px; }
+  dialog h3 { font: 700 22px var(--titulo); margin: 0 0 16px; }
+  .pie-dialogo { display: flex; gap: 10px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+  .pie-dialogo .quitar { margin-left: auto; color: var(--coral); font-weight: 600; padding: 8px 4px; }
+  .aviso-flotante { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 30; background: var(--capa2); border: 1px solid var(--hilo); border-radius: 12px; padding: 10px 10px 10px 16px; display: flex; gap: 14px; align-items: center; width: max-content; max-width: calc(100vw - 32px); }
+  .aviso-flotante button { color: var(--oro); font-weight: 700; padding: 6px 10px; }
+  .codigo-grande { font: 800 40px/1 var(--titulo); letter-spacing: .12em; color: var(--oro); margin: 6px 0 12px; }
+  .cargando { opacity: .55; pointer-events: none; }
+  nav .salir { margin-top: auto; }
+  @media (max-width: 880px) { .aviso-flotante { bottom: 86px; } nav .salir { margin-top: 0; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-inicio" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></symbol>
+  <symbol id="i-objetivos" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6"/></symbol>
+  <symbol id="i-tareas" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></symbol>
+  <symbol id="i-dinero" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5"/><circle cx="12" cy="12" r="2.5"/></symbol>
+  <symbol id="i-quejas" viewBox="0 0 24 24"><path d="M5 5h14v10H10l-5 4z"/></symbol>
+  <symbol id="i-ideas" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"/></symbol>
+  <symbol id="i-charlas" viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16.5" cy="9" r="3"/><path d="M3 19c.8-3 2.8-4.5 5-4.5s4.2 1.5 5 4.5M12 19c.7-2.6 2.5-4.5 4.5-4.5S20.3 16 21 19"/></symbol>
+  <symbol id="i-reunion" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3v4M15 3v4"/></symbol>
+  <symbol id="i-legal" viewBox="0 0 24 24"><path d="M12 4v16M7 20h10M5 8h14M5 8l-2.5 6a3 3 0 0 0 5 0zM19 8l-2.5 6a3 3 0 0 0 5 0z"/></symbol>
+  <symbol id="i-equipo" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1-4 3.8-6 7-6s6 2 7 6"/></symbol>
+  <symbol id="i-salir" viewBox="0 0 24 24"><path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10"/></symbol>
+</svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="sello" viewBox="0 0 34 34"><circle cx="8" cy="25" r="4.5" fill="#E7B95B"/><circle cx="26" cy="9" r="4.5" fill="#AE9CFF"/><circle cx="26" cy="25" r="3" fill="#4FCAA5"/><path d="M8 25L26 9M26 9v16M8 25h18" stroke="#EAF2EF" stroke-opacity=".5" stroke-width="1.6"/></symbol>
+</svg>
+
+<!-- Entrada -->
+<section class="entrada" id="entrada">
+  <div class="caja">
+    <div class="sello"><svg width="34" height="34"><use href="#sello"/></svg><b>Nexus</b></div>
+    <div id="paso-elegir">
+      <h1>Centro de mando</h1>
+      <p>¿Quién eres?</p>
+      <div class="elegir">
+        <button data-entrar="jefe"><b>Emmanuel</b><span>Entra con tu contraseña</span></button>
+        <button data-entrar="equipo"><b>Del equipo</b><span>Entra con tu código de 6 cifras</span></button>
+      </div>
+    </div>
+    <form id="paso-clave" class="oculto">
+      <h1 id="titulo-clave">Tu contraseña</h1>
+      <label class="campo"><span id="etiqueta-clave">Contraseña</span><input class="texto" id="secreto" type="password" autocomplete="current-password" required></label>
+      <p class="error" id="error-entrada" role="alert"></p>
+      <button class="boton" type="submit" id="boton-entrar">Entrar</button>
+      <button class="enlace" type="button" id="volver" style="margin-left:12px">Volver</button>
+    </form>
+  </div>
+</section>
+
+<!-- La app -->
+<div class="app oculto" id="app">
+  <nav aria-label="Menú" id="menu"></nav>
+  <main id="contenido"></main>
+</div>
+
+<dialog id="dialogo"><form method="dialog" id="formulario"></form></dialog>
+<div class="aviso-flotante oculto" id="aviso" role="status"><span id="aviso-texto"></span><button type="button" id="aviso-boton"></button></div>
+
+<script>
+// Dirección del cerebro en Google (se rellena al publicar). Con ?demo se usa un cerebro de mentira.
+const API = "https://script.google.com/macros/s/AKfycbxs0aK0pZqaogvugnIvjMfvy3IBHnGeT80-2ybcZq2FEQfIYDDbBLnNcubrhFc1xiSM/exec";
+const MODO_DEMO = false;
+const GUARDADA = "nexus_sesion";
+
+const $ = (s, el) => (el || document).querySelector(s);
+const esc = (t) => String(t === null || t === undefined ? "" : t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const euros = (n) => (Math.round((Number(n) || 0) * 100) / 100).toLocaleString("es-ES", { maximumFractionDigits: 2 });
+const hoyTexto = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const fecha = (v) => { if (!v) return ""; const d = typeof v === "number" ? new Date(v) : new Date(v + "T12:00:00"); return isNaN(d) ? "" : d.toLocaleDateString("es-ES", { day: "numeric", month: "short" }); };
+const hoyLargo = () => { const t = new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }); return t.charAt(0).toUpperCase() + t.slice(1); };
+const leerGuardada = () => { try { return JSON.parse(localStorage.getItem(GUARDADA) || "null"); } catch (e) { return null; } };
+const guardarSesion = (s) => { try { s ? localStorage.setItem(GUARDADA, JSON.stringify(s)) : localStorage.removeItem(GUARDADA); } catch (e) {} };
+
+// ---------- Hablar con el cerebro ----------
+let sesion = null;     // { como: "jefe" | "equipo", secreto }
+let estado = null;     // lo último que contestó el cerebro
+let vista = "inicio";
+function llamar(extra) {
+  const cuerpo = Object.assign(sesion.como === "jefe" ? { clave: sesion.secreto } : { codigo: sesion.secreto }, extra || {});
+  if (MODO_DEMO) return Promise.resolve(window.cerebroDemo(cuerpo));
+  return fetch(API, { method: "POST", body: JSON.stringify(cuerpo) }).then((r) => r.json()).catch(() => ({ ok: false, error: "red" }));
+}
+const ETIQUETAS = { titulo: "Título", plazo: "Plazo", concepto: "Concepto", importe: "Importe", texto: "Texto", nombre: "Nombre", con_quien: "Con quién", asunto: "Asunto", tipo: "Tipo", puntos: "Puntos", se_repite: "Veces que se repite" };
+const ERRORES = {
+  clave: "Esa contraseña no es.", codigo: "Ese código no es. Pídele uno nuevo a Emmanuel.",
+  bloqueado: "Demasiados intentos. Espera 15 minutos.", "sin-clave": "Todavía no hay contraseña puesta en Google.",
+  red: "No hay conexión con Google. Prueba otra vez.", "no-existe": "Eso ya no existe.", accion: "Eso no se puede hacer desde aquí."
+};
+const textoError = (e) => {
+  e = String(e || "");
+  if (ERRORES[e]) return ERRORES[e];
+  if (e.indexOf("falta:") === 0) return "Falta rellenar: " + e.slice(6).split(",").map((k) => (ETIQUETAS[k] || k).toLowerCase()).join(", ") + ".";
+  if (e.indexOf("numero:") === 0) return "Revisa el número de «" + (ETIQUETAS[e.slice(7)] || e.slice(7)).toLowerCase() + "».";
+  return "Algo ha fallado (" + e + ").";
+};
+// Pide algo al cerebro; si va bien, guarda lo nuevo y repinta. Devuelve la respuesta.
+function pedir(extra) {
+  document.body.classList.add("cargando");
+  return llamar(extra).then((r) => {
+    document.body.classList.remove("cargando");
+    if (r && r.ok) { estado = r; pintar(); }
+    else if (r && (r.error === "clave" || r.error === "codigo")) salir();
+    return r || { ok: false, error: "red" };
+  });
+}
+
+// ---------- Entrada ----------
+let entrandoComo = "jefe";
+document.querySelectorAll("[data-entrar]").forEach((b) => b.onclick = () => {
+  entrandoComo = b.dataset.entrar;
+  const jefe = entrandoComo === "jefe";
+  $("#paso-elegir").classList.add("oculto"); $("#paso-clave").classList.remove("oculto");
+  $("#titulo-clave").textContent = jefe ? "Hola, Emmanuel" : "Hola";
+  $("#etiqueta-clave").textContent = jefe ? "Tu contraseña" : "Tu código de 6 cifras";
+  $("#secreto").type = jefe ? "password" : "text";
+  $("#secreto").inputMode = jefe ? "text" : "numeric";
+  $("#secreto").value = ""; $("#error-entrada").textContent = "";
+  $("#secreto").focus();
+});
+$("#volver").onclick = () => { $("#paso-clave").classList.add("oculto"); $("#paso-elegir").classList.remove("oculto"); };
+$("#paso-clave").onsubmit = (e) => {
+  e.preventDefault();
+  const secreto = $("#secreto").value.trim();
+  if (!secreto) return;
+  sesion = { como: entrandoComo, secreto: secreto };
+  $("#boton-entrar").disabled = true;
+  llamar({}).then((r) => {
+    $("#boton-entrar").disabled = false;
+    if (!r.ok) { $("#error-entrada").textContent = textoError(r.error); sesion = null; return; }
+    guardarSesion(sesion); estado = r; vista = "inicio"; abrirApp();
+  });
+};
+function abrirApp() { $("#entrada").classList.add("oculto"); $("#app").classList.remove("oculto"); pintar(); }
+function salir() { guardarSesion(null); sesion = null; estado = null; $("#app").classList.add("oculto"); $("#entrada").classList.remove("oculto"); $("#paso-clave").classList.add("oculto"); $("#paso-elegir").classList.remove("oculto"); }
+
+// ---------- Ayudantes de datos ----------
+const esJefe = () => estado && estado.quien === "jefe";
+const vivos = (t) => ((estado.datos[t]) || []).filter((x) => !x.quitado);
+const equipo = () => esJefe() ? vivos("Equipo") : Object.keys(estado.nombres || {}).map((id) => ({ id: id, nombre: estado.nombres[id] }));
+const nombreDe = (id) => !id || id === "jefe" ? "Emmanuel" : ((equipo().find((p) => p.id === id) || {}).nombre || "Alguien");
+const claseDe = (id) => !id || id === "jefe" ? "s-e" : "s-a";
+const socio = (id) => `<span class="socio ${claseDe(id)}">${esc(nombreDe(id))}</span>`;
+const semana = () => Date.now() - 7 * 24 * 3600 * 1000;
+const PLAZOS = { corto: "Este mes", medio: "Este curso", largo: "En 2-3 años" };
+const COLOR_ESTADO = { "por hacer": "e-niebla", haciendo: "e-oro", hecha: "e-jade", esperando: "e-oro", arreglar: "e-coral", "a medias": "e-oro", revisar: "e-oro", bien: "e-jade", guardada: "e-niebla", elegida: "e-jade", "en pausa": "e-niebla", descartada: "e-coral" };
+const LUZ = { arreglar: "var(--coral)", "a medias": "var(--oro)", revisar: "var(--oro)", bien: "var(--jade)" };
+const may = (t) => t ? t.charAt(0).toUpperCase() + t.slice(1) : "";
+const etiquetaEstado = (e) => e ? `<span class="estado ${COLOR_ESTADO[e] || "e-niebla"}">${esc(may(e))}</span>` : "";
+const vacio = (texto, boton) => `<div class="vacio">${texto}${boton ? `<div>${boton}</div>` : ""}</div>`;
+const botonNuevo = (tabla, texto, extra) => `<button class="boton peq" data-nuevo="${tabla}"${extra ? ` data-extra='${esc(JSON.stringify(extra))}'` : ""}>${texto}</button>`;
+
+// ---------- Menú ----------
+const MENU_JEFE = [["inicio", "Inicio"], ["objetivos", "Objetivos"], ["tareas", "Tareas"], ["dinero", "Dinero"], ["quejas", "Quejas"], ["ideas", "Ideas"], ["charlas", "Charlas"], ["reunion", "Reunión"], ["legal", "Legal"], ["equipo", "Equipo"]];
+const MENU_EQUIPO = [["inicio", "Mis tareas"], ["objetivos", "Objetivos"], ["quejas", "Quejas"], ["ideas", "Ideas"]];
+function pintarMenu() {
+  const items = esJefe() ? MENU_JEFE : MENU_EQUIPO;
+  $("#menu").innerHTML = `<div class="sello"><svg width="34" height="34"><use href="#sello"/></svg><b>Nexus</b></div>` +
+    items.map(([v, t]) => `<button data-v="${v}"${v === vista ? ' aria-current="page"' : ""}><svg class="i"><use href="#i-${v}"/></svg>${t}</button>`).join("") +
+    `<button class="salir" data-salir><svg class="i"><use href="#i-salir"/></svg>Salir</button>`;
+}
+
+// ---------- Pantallas ----------
+const PANTALLAS = {};
+function pintar() {
+  if (!estado) return;
+  const permitidas = (esJefe() ? MENU_JEFE : MENU_EQUIPO).map((x) => x[0]);
+  if (permitidas.indexOf(vista) === -1) vista = "inicio";
+  pintarMenu();
+  $("#contenido").innerHTML = (esJefe() || vista !== "inicio" ? PANTALLAS[vista]() : PANTALLAS.misTareas()) + (MODO_DEMO ? `<p class="pie-boceto">Modo de prueba: lo que apuntes se borra al recargar.</p>` : "");
+}
+
+PANTALLAS.inicio = () => {
+  const objs = vivos("Objetivos");
+  const primero = (p) => objs.find((o) => o.plazo === p && o.hecho !== "sí") || objs.find((o) => o.plazo === p);
+  const mes = primero("corto"), curso = primero("medio"), largo = primero("largo");
+  const tareas = vivos("Tareas");
+  const hechasSemana = tareas.filter((t) => t.estado === "hecha" && t.hecha_el >= semana()).length;
+  const delMes = mes ? tareas.filter((t) => t.objetivo === mes.id) : [];
+  const delMesHechas = delMes.filter((t) => t.estado === "hecha").length;
+  const nodo = (clase, cuando, texto) => `<div class="nodo ${clase}"><span class="cuando">${cuando}</span><i></i><b>${esc(texto)}</b></div>`;
+  const rumbo = `<div class="rumbo">
+      ${mes ? `<p class="que">Objetivo de este mes</p><div class="meta-mes">${esc(mes.titulo)}</div>
+      <p class="que">${delMes.length ? `${delMesHechas} de ${delMes.length} tareas hechas para conseguirlo.` : "Todavía no hay tareas para este objetivo."}</p>`
+      : `<p class="que">Objetivo de este mes</p><div class="meta-mes">Sin poner todavía</div><p class="que">Decididlo cuando tengáis claro a qué os dedicáis al 100 %.</p>`}
+      <div class="camino" aria-label="Rumbo: esta semana, este mes, este curso y en 2-3 años">
+        <svg viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true"><path class="base" d="M125 60 H875"/><path class="hecho" d="M125 60 H375"/></svg>
+        <div class="nodos">
+          ${nodo(hechasSemana ? "ya" : "", "Esta semana", hechasSemana === 1 ? "1 tarea hecha" : hechasSemana + " tareas hechas")}
+          ${nodo("aqui", "Este mes", mes ? mes.titulo : "Sin poner")}
+          ${nodo("", "Este curso", curso ? curso.titulo : "Sin poner")}
+          ${nodo("", "En 2-3 años", largo ? largo.titulo : "Sin poner")}
+        </div>
+      </div>
+      <div class="acciones">${mes ? `<button class="boton" data-ir="objetivos">Ver objetivos</button>` : botonNuevo("Objetivos", "Poner el objetivo del mes", { plazo: "corto" })}</div>
+    </div>`;
+  const dinero = vivos("Dinero");
+  const entra = dinero.filter((m) => m.tipo === "ingreso").reduce((s, m) => s + Number(m.importe), 0);
+  const sale = dinero.filter((m) => m.tipo === "gasto").reduce((s, m) => s + Number(m.importe), 0);
+  const quejas = vivos("Quejas");
+  const nuevas = quejas.filter((q) => q.creado >= semana()).length;
+  const charlasPend = vivos("Charlas").filter((c) => c.estado !== "hecha");
+  const total = tareas.length, hechas = tareas.filter((t) => t.estado === "hecha").length;
+  const marcador = `<div class="marcador">
+      <div><div class="que-es">Beneficio</div><div class="num">${euros(entra - sale)}<small>€</small></div><p>${entra ? euros(entra) + " € entrado, " + euros(sale) + " € gastado" : "Todavía sin movimientos"}</p></div>
+      <div><div class="que-es">Quejas apuntadas</div><div class="num">${quejas.length}</div><p>${nuevas} esta semana</p></div>
+      <div><div class="que-es">Charlas pendientes</div><div class="num">${charlasPend.length}</div><p>${charlasPend.filter((c) => c.estado === "esperando").length} esperando respuesta</p></div>
+      <div><div class="que-es">Tareas hechas</div><div class="num">${hechas}<small>de ${total}</small></div><div class="progreso"><i style="width:${total ? Math.round(hechas / total * 100) : 0}%"></i></div></div>
+    </div>`;
+  const pendientes = tareas.filter((t) => t.estado !== "hecha").sort((a, b) => (a.estado === "haciendo" ? -1 : 0) - (b.estado === "haciendo" ? -1 : 0)).slice(0, 5);
+  const decisiones = vivos("Decisiones").sort((a, b) => b.creado - a.creado);
+  const reunion = (estado.ajustes || {}).REUNION;
+  return `<div class="cabeza"><div><h1>${hoyLargo()}</h1></div></div>${rumbo}${marcador}
+    <div class="dos">
+      <div><h2>Tareas pendientes</h2>${pendientes.length ? `<div class="lista">${pendientes.map(filaTarea).join("")}</div>` : vacio("No hay tareas. Las pondréis cuando sepáis qué hace cada uno.", botonNuevo("Tareas", "Nueva tarea"))}</div>
+      <div><h2>Próxima reunión</h2><div class="panel">
+        <p>${reunion ? esc(reunion) : "Sin día fijo todavía"}</p>
+        <h3>Reunión semanal de 20 minutos</h3>
+        <p>Lo que hizo cada uno, el marcador, las quejas y el plan de la semana.</p>
+        <button class="boton" style="margin-top:16px" data-ir="reunion">Ir a la reunión</button>
+        ${decisiones[0] ? `<div class="decision"><b>Última decisión: ${esc(decisiones[0].texto)}</b><span>${fecha(decisiones[0].dia)}${decisiones[0].quien ? ", " + esc(decisiones[0].quien) : ""}</span></div>` : ""}
+      </div></div>
+    </div>`;
+};
+
+function filaTarea(t) {
+  const obj = vivos("Objetivos").find((o) => o.id === t.objetivo);
+  const detalle = [obj ? "Para: " + obj.titulo : "", t.para_cuando ? "Hasta el " + fecha(t.para_cuando) : ""].filter(Boolean).join(". ");
+  return `<div class="fila clic" data-editar="Tareas" data-id="${t.id}">${socio(t.para)}<div class="q"><b>${esc(t.titulo)}</b>${detalle ? `<span>${esc(detalle)}</span>` : ""}</div>${etiquetaEstado(t.estado || "por hacer")}</div>`;
+}
+
+PANTALLAS.objetivos = () => {
+  const objs = vivos("Objetivos");
+  const col = (plazo, clase) => {
+    const suyos = objs.filter((o) => o.plazo === plazo);
+    return `<div class="plazo ${clase}"><span class="cuando">${PLAZOS[plazo]}</span>
+      ${suyos.length ? `<ul>${suyos.map((o) => `<li class="${o.hecho === "sí" ? "ok" : ""} ${esJefe() ? "clic" : ""}" ${esJefe() ? `data-editar="Objetivos" data-id="${o.id}"` : ""}><b style="font-weight:600">${esc(o.titulo)}</b>${o.detalle ? `<br><span class="sub">${esc(o.detalle)}</span>` : ""}</li>`).join("")}</ul>` : `<p style="margin-top:10px">Sin poner.</p>`}
+      ${esJefe() ? `<div style="margin-top:14px">${botonNuevo("Objetivos", "Añadir", { plazo: plazo })}</div>` : ""}</div>`;
+  };
+  return `<div class="cabeza"><div><h1>Objetivos</h1><p>Lo grande, partido en trozos.</p></div></div>
+    <div class="plazos">${col("largo", "largo")}${col("medio", "medio")}${col("corto", "corto")}</div>
+    <p class="regla">Si una tarea no ayuda a ningún objetivo, no se hace.</p>`;
+};
+
+PANTALLAS.tareas = () => {
+  const tareas = vivos("Tareas");
+  const ficha = (t) => {
+    const obj = vivos("Objetivos").find((o) => o.id === t.objetivo);
+    return `<div class="ficha clic" data-editar="Tareas" data-id="${t.id}">${socio(t.para)}<b>${esc(t.titulo)}</b><span>${esc([obj ? "Para: " + obj.titulo : "", t.para_cuando ? "Hasta el " + fecha(t.para_cuando) : "", t.comentario ? "«" + t.comentario + "»" : ""].filter(Boolean).join(". "))}</span></div>`;
+  };
+  const col = (est, titulo, clase) => {
+    const suyas = tareas.filter((t) => (t.estado || "por hacer") === est);
+    return `<div class="col ${clase || ""}"><h3>${titulo} <small>${suyas.length}${est === "haciendo" ? " de 2" : ""}</small></h3>${suyas.map(ficha).join("") || `<p class="sub">Nada.</p>`}${est === "haciendo" && suyas.length > 2 ? `<p class="aviso-limite">Hay más de 2 a la vez. Terminad alguna antes de empezar otra.</p>` : ""}</div>`;
+  };
+  return `<div class="cabeza"><div><h1>Tareas</h1></div></div>
+    <div class="barra-acc">${botonNuevo("Tareas", "Nueva tarea")}</div>
+    ${tareas.length ? `<div class="tablero">${col("por hacer", "Por hacer")}${col("haciendo", "Haciendo")}${col("hecha", "Hecho", "hecho")}</div>` : vacio("Todavía no hay tareas. Primero hablad de qué hace cada uno y de la app a la que os dedicáis.")}`;
+};
+
+PANTALLAS.dinero = () => {
+  const movs = vivos("Dinero").sort((a, b) => String(b.dia).localeCompare(String(a.dia)) || b.creado - a.creado);
+  const entra = movs.filter((m) => m.tipo === "ingreso").reduce((s, m) => s + Number(m.importe), 0);
+  const sale = movs.filter((m) => m.tipo === "gasto").reduce((s, m) => s + Number(m.importe), 0);
+  const ben = Math.max(entra - sale, 0);
+  const empresa = ben * 0.2, resto = ben - empresa;
+  const otro = equipo()[0];
+  return `<div class="cabeza"><div><h1>Dinero</h1></div></div>
+    <div class="cuentas">
+      <div><div class="que-es sub">Ha entrado</div><div class="num verde">${euros(entra)}<small>€</small></div></div>
+      <div><div class="que-es sub">Ha salido</div><div class="num rojo">${euros(sale)}<small>€</small></div></div>
+      <div><div class="que-es sub">Beneficio</div><div class="num">${euros(entra - sale)}<small>€</small></div></div>
+    </div>
+    <h2>A dónde va el beneficio</h2>
+    <p class="sub" style="margin:0">Primero se aparta un 20 % para la empresa. El resto, 65 % y 35 %.</p>
+    ${ben ? `<div class="reparto">
+      <div style="flex:20;background:var(--jade)">${euros(empresa)} €<small>Empresa</small></div>
+      <div style="flex:52;background:var(--oro)">${euros(resto * 0.65)} €<small>Emmanuel</small></div>
+      <div style="flex:28;background:var(--lila)">${euros(resto * 0.35)} €<small>${esc(otro ? otro.nombre : "Socio")}</small></div></div>` : `<p class="sub">Cuando haya beneficio, aquí saldrá cuánto le toca a cada uno.</p>`}
+    <h2>Movimientos</h2>
+    <div class="barra-acc">${botonNuevo("Dinero", "Apuntar ingreso", { tipo: "ingreso" })}${botonNuevo("Dinero", "Apuntar gasto", { tipo: "gasto" })}</div>
+    ${movs.length ? `<div>${movs.map((m) => `<div class="mov clic" data-editar="Dinero" data-id="${m.id}"><span class="f">${fecha(m.dia)}</span><span><b style="font-weight:600">${esc(m.concepto)}</b><small>${esc([m.quien ? (m.tipo === "gasto" ? "Pagó " : "Cobró ") + m.quien : "", m.recibo === "sí" ? "con recibo" : m.recibo === "no" ? "falta el recibo" : ""].filter(Boolean).join(", "))}</small></span><span class="cant ${m.tipo === "gasto" ? "rojo" : "verde"}">${m.tipo === "gasto" ? "−" : "+"}${euros(m.importe)} €</span></div>`).join("")}</div>` : vacio("Todavía no ha entrado ni salido dinero. Cada euro que se mueva, se apunta aquí con su recibo.")}`;
+};
+
+PANTALLAS.quejas = () => {
+  const quejas = vivos("Quejas").sort((a, b) => b.creado - a.creado);
+  const puedeEditar = (q) => esJefe() || q.apuntada_por === estado.yo;
+  return `<div class="cabeza"><div><h1>Libreta de quejas</h1><p>Tal cual lo dijo la gente.</p></div></div>
+    <form class="apuntar" id="apuntar-queja"><input class="texto" id="nueva-queja" maxlength="300" placeholder="¿Qué has oído? Escríbelo tal cual" aria-label="Nueva queja"><button class="boton" type="submit">Apuntar</button></form>
+    ${quejas.length ? `<div class="quejas">${quejas.map((q) => `<div class="queja ${puedeEditar(q) ? "clic" : ""}" ${puedeEditar(q) ? `data-editar="Quejas" data-id="${q.id}"` : ""}><blockquote>${esc(q.texto)}</blockquote><div class="pie">${socio(q.apuntada_por)}${esc([q.quien_lo_dijo, q.donde].filter(Boolean).join(", "))}${Number(q.se_repite) > 1 ? ` <span class="estado e-jade">Se repite ${esc(q.se_repite)} veces</span>` : ""}${q.apano === "sí" ? ` <span class="estado e-oro">Ya tiene un apaño</span>` : ""}</div></div>`).join("")}</div>`
+      : vacio("Todavía no hay quejas. Cada vez que alguien diga «qué rollo…» o «siempre se me olvida…», apuntadlo aquí.")}
+    <p class="regla">Valen las que se repiten, cuestan algo y ya tienen un apaño casero. No valen las de «estaría guay».</p>`;
+};
+
+PANTALLAS.ideas = () => {
+  const ideas = vivos("Ideas").sort((a, b) => (Number(b.puntos) || -1) - (Number(a.puntos) || -1));
+  return `<div class="cabeza"><div><h1>Ideas</h1><p>Puntuadas con las 8 preguntas, de 24 como máximo.</p></div></div>
+    ${esJefe() ? `<div class="barra-acc">${botonNuevo("Ideas", "Nueva idea")}</div>` : ""}
+    <div>${ideas.map((i) => `<div class="idea ${esJefe() ? "clic" : ""}" ${esJefe() ? `data-editar="Ideas" data-id="${i.id}"` : ""}><div><b>${esc(i.nombre)}</b><span>${esc(i.que_es)}</span>${i.para_quien ? `<span>Para: ${esc(i.para_quien)}</span>` : ""}${i.estado && i.estado !== "guardada" ? `<span>${etiquetaEstado(i.estado)}</span>` : ""}</div><div class="nota">${i.puntos === "" || i.puntos === undefined ? `<span style="color:var(--niebla)">—</span><small>sin puntuar</small>` : esc(i.puntos) + "<small>de 24</small>"}</div></div>`).join("")}</div>`;
+};
+
+PANTALLAS.charlas = () => {
+  const charlas = vivos("Charlas");
+  const fila = (c) => `<div class="fila clic" data-editar="Charlas" data-id="${c.id}">${socio(c.quien_va)}<div class="q"><b>${esc(c.con_quien)}</b><span>${esc([c.para_que ? "Para " + c.para_que.replace(/^para /i, "") : "", c.lo_que_nos_llevamos ? "«" + c.lo_que_nos_llevamos + "»" : ""].filter(Boolean).join(". "))}</span></div><span class="estado e-niebla">${esc([may(c.como), fecha(c.cuando)].filter(Boolean).join(", "))}</span></div>`;
+  const grupo = (est, titulo) => { const suyas = charlas.filter((c) => (c.estado || "por hacer") === est); return suyas.length ? `<h2>${titulo}</h2><div class="lista">${suyas.map(fila).join("")}</div>` : ""; };
+  return `<div class="cabeza"><div><h1>Charlas y visitas</h1><p>Para qué vamos antes, y qué nos llevamos después.</p></div></div>
+    <div class="barra-acc">${botonNuevo("Charlas", "Nueva charla")}</div>
+    ${charlas.length ? grupo("por hacer", "Por hacer") + grupo("esperando", "Esperando respuesta") + grupo("hecha", "Hechas, y lo que nos llevamos") : vacio("No hay charlas apuntadas. La primera seguramente sea con la persona de la gestoría.")}`;
+};
+
+const ORDEN_DEL_DIA = [
+  ["¿Cómo estamos?", "Si hay exámenes, semana sin tareas.", 1], ["Lo que hizo cada uno", "Y lo que descubrió. Aquí se dice «esto cambió gracias a ti».", 4],
+  ["El marcador", "Dinero, quejas, charlas y tareas.", 2], ["Libreta de quejas", "Cada uno lee las suyas.", 3],
+  ["Esta semana", "Una o dos tareas por persona, no más.", 3], ["¿Algo nos bloquea?", "Dudas y problemas.", 2], ["Tema libre", "Lo que queráis.", 5]];
+let pasoReunion = 0;
+PANTALLAS.reunion = () => {
+  const reunion = (estado.ajustes || {}).REUNION;
+  const decisiones = vivos("Decisiones").sort((a, b) => b.creado - a.creado);
+  return `<div class="cabeza"><div><h1>Reunión semanal</h1><p>${reunion ? esc(reunion) + ". " : ""}Unos 20 minutos.</p></div></div>
+    <div class="barra-acc"><button class="boton peq suave" data-ajuste="REUNION">${reunion ? "Cambiar el día" : "Poner día y hora"}</button></div>
+    <div class="orden">${ORDEN_DEL_DIA.map(([t, d, m], i) => `<div class="paso clic ${i < pasoReunion ? "hecho" : i === pasoReunion ? "ahora" : ""}" data-paso="${i}"><div class="n">${i < pasoReunion ? "✓" : i + 1}</div><div><b>${t}</b><span>${d}</span></div><span class="min">${m} min</span></div>`).join("")}</div>
+    <div class="acciones-fila"><button class="boton peq" data-paso="${Math.min(pasoReunion + 1, ORDEN_DEL_DIA.length)}">${pasoReunion >= ORDEN_DEL_DIA.length - 1 ? "Terminar" : "Siguiente punto"}</button>${pasoReunion ? `<button class="boton peq suave" data-paso="0">Empezar de nuevo</button>` : ""}</div>
+    <h2>Decisiones apuntadas</h2>
+    <div class="barra-acc">${botonNuevo("Decisiones", "Apuntar una decisión")}</div>
+    ${decisiones.length ? `<div class="lista">${decisiones.map((d) => `<div class="fila clic" data-editar="Decisiones" data-id="${d.id}"><div class="q"><b>${esc(d.texto)}</b><span>${esc([fecha(d.dia), d.quien, d.porque].filter(Boolean).join(". "))}</span></div></div>`).join("")}</div>` : vacio("Ninguna todavía. Lo que decidáis en la reunión, apuntadlo aquí con su porqué.")}`;
+};
+
+PANTALLAS.legal = () => {
+  const cosas = vivos("Legal");
+  const orden = { arreglar: 0, "a medias": 1, revisar: 2, bien: 3 };
+  cosas.sort((a, b) => (orden[a.estado] === undefined ? 4 : orden[a.estado]) - (orden[b.estado] === undefined ? 4 : orden[b.estado]));
+  return `<div class="cabeza"><div><h1>Legal</h1></div></div>
+    <div class="barra-acc">${botonNuevo("Legal", "Añadir")}</div>
+    <div class="lista">${cosas.map((l) => `<div class="fila clic" data-editar="Legal" data-id="${l.id}"><span class="luz" style="background:${LUZ[l.estado] || "var(--niebla)"}"></span><div class="q"><b>${esc(l.asunto)}</b><span>${esc(l.detalle)}</span></div>${etiquetaEstado(l.estado)}</div>`).join("")}</div>
+    <p class="regla">Claude revisa esta lista, pero lo legal siempre lo confirma alguien que sabe: la persona de la gestoría.</p>`;
+};
+
+PANTALLAS.equipo = () => {
+  const gente = vivos("Equipo");
+  return `<div class="cabeza"><div><h1>Equipo</h1><p>Quién entra con código y cuándo entró por última vez.</p></div></div>
+    <div class="barra-acc">${botonNuevo("Equipo", "Añadir a alguien")}</div>
+    ${gente.length ? `<div class="lista">${gente.map((p) => `<div class="fila"><span class="socio s-a">${esc(p.nombre)}</span><div class="q"><b>${esc(p.rol || "Sin papel todavía")}</b><span>${p.ultima_vez ? "Entró el " + fecha(p.ultima_vez) : "Todavía no ha entrado"}</span></div><button class="boton peq suave" data-codigo="${p.id}">Código nuevo</button><button class="boton peq suave" data-editar="Equipo" data-id="${p.id}">Cambiar</button></div>`).join("")}</div>`
+      : vacio("Todavía no hay nadie. Añade a Aray y te saldrá su código para entrar.")}`;
+};
+
+// La pantalla de Aray: sus tareas con botones
+PANTALLAS.misTareas = () => {
+  const mias = vivos("Tareas");
+  const tarjeta = (t) => `<div class="panel" style="margin-bottom:12px">
+      <p>${etiquetaEstado(t.estado || "por hacer")}${t.para_cuando ? ` <span class="sub">hasta el ${fecha(t.para_cuando)}</span>` : ""}</p>
+      <h3>${esc(t.titulo)}</h3>
+      ${t.porque ? `<p><b style="color:var(--papel)">Para qué sirve:</b> ${esc(t.porque)}</p>` : ""}
+      ${t.como ? `<p style="margin-top:8px;white-space:pre-line"><b style="color:var(--papel)">Cómo hacerlo:</b>\n${esc(t.como)}</p>` : ""}
+      ${t.comentario ? `<p style="margin-top:8px">Tu comentario: «${esc(t.comentario)}»</p>` : ""}
+      <div class="acciones-fila">${t.estado === "hecha" ? `<button class="boton peq suave" data-tarea="deshacer" data-id="${t.id}">Deshacer</button>`
+        : `${t.estado !== "haciendo" ? `<button class="boton peq suave" data-tarea="empezar" data-id="${t.id}">Empezar</button>` : ""}<button class="boton peq" data-tarea="hecha" data-id="${t.id}">Marcar como hecha</button>`}</div>
+    </div>`;
+  const pend = mias.filter((t) => t.estado !== "hecha"), hechas = mias.filter((t) => t.estado === "hecha");
+  return `<div class="cabeza"><div><h1>${hoyLargo()}</h1><p>Hola, ${esc(estado.nombre)}.</p></div></div>
+    ${pend.length ? pend.map(tarjeta).join("") : vacio("No tienes tareas pendientes. Emmanuel te las pondrá aquí.")}
+    ${hechas.length ? `<h2>Hechas</h2>${hechas.map(tarjeta).join("")}` : ""}`;
+};
+
+// ---------- Formularios ----------
+const OPCIONES_PERSONA = () => [["jefe", "Emmanuel"]].concat(equipo().map((p) => [p.id, p.nombre]));
+const FORMULARIOS = {
+  Objetivos: { titulo: "Objetivo", campos: [["titulo", "Qué queremos conseguir", "texto"], ["plazo", "Para cuándo", "opcion", [["corto", "Este mes"], ["medio", "Este curso"], ["largo", "En 2-3 años"]]], ["detalle", "Cómo sabremos que está conseguido", "area"], ["hecho", "¿Conseguido?", "opcion", [["", "Todavía no"], ["sí", "Sí"]]]] },
+  Tareas: { titulo: "Tarea", campos: [["titulo", "Qué hay que hacer", "texto"], ["para", "Quién la hace", "persona"], ["objetivo", "A qué objetivo ayuda", "objetivo"], ["estado", "Cómo va", "opcion", [["por hacer", "Por hacer"], ["haciendo", "Haciendo"], ["hecha", "Hecha"]]], ["para_cuando", "Para cuándo", "fecha"], ["porque", "Para qué sirve", "area", null, "Aray lo verá: le ayuda a entender por qué es importante."], ["como", "Cómo hacerlo, paso a paso", "area"]] },
+  Dinero: { titulo: "Movimiento", campos: [["tipo", "Tipo", "opcion", [["ingreso", "Ha entrado"], ["gasto", "Ha salido"]]], ["concepto", "Qué es", "texto"], ["importe", "Cuánto (€)", "num"], ["quien", "Quién lo cobró o lo pagó", "texto"], ["recibo", "¿Hay recibo?", "opcion", [["", "No lo sé"], ["sí", "Sí"], ["no", "Todavía no"]]], ["dia", "Día", "fecha"]] },
+  Quejas: { titulo: "Queja", campos: [["texto", "Lo que dijo, tal cual", "area"], ["quien_lo_dijo", "Quién lo dijo", "texto", null, "Sin apellidos ni teléfonos: basta con «una peluquera» o «mi tía»."], ["donde", "Dónde", "texto"], ["se_repite", "Veces que lo has oído", "num"], ["apano", "¿Ya tiene un apaño casero?", "opcion", [["", "No lo sé"], ["sí", "Sí"], ["no", "No"]]]] },
+  Ideas: { titulo: "Idea", campos: [["nombre", "Nombre", "texto"], ["que_es", "Qué es", "area"], ["para_quien", "Para quién", "texto"], ["puntos", "Puntos (de 24)", "num"], ["estado", "Estado", "opcion", [["guardada", "Guardada"], ["elegida", "Elegida"], ["en pausa", "En pausa"], ["descartada", "Descartada"]]], ["enlace", "Enlace (lienzo, prototipo…)", "texto"]] },
+  Charlas: { titulo: "Charla o visita", campos: [["con_quien", "Con quién", "texto"], ["para_que", "Para qué", "area"], ["como", "Cómo", "opcion", [["", "Sin decidir"], ["visita", "Visita"], ["llamada", "Llamada"], ["mensaje", "Mensaje"], ["en casa", "En casa"]]], ["cuando", "Cuándo", "fecha"], ["quien_va", "Quién va", "persona"], ["estado", "Cómo va", "opcion", [["por hacer", "Por hacer"], ["esperando", "Esperando respuesta"], ["hecha", "Hecha"]]], ["lo_que_nos_llevamos", "Lo que nos llevamos", "area", null, "Lo importante, con sus palabras."]] },
+  Decisiones: { titulo: "Decisión", campos: [["texto", "Qué hemos decidido", "texto"], ["porque", "Por qué", "area"], ["quien", "Quién lo propuso", "texto"], ["dia", "Día", "fecha"]] },
+  Legal: { titulo: "Asunto legal", campos: [["asunto", "Asunto", "texto"], ["detalle", "Qué falta o qué sabemos", "area"], ["estado", "Cómo está", "opcion", [["arreglar", "Hay que arreglarlo"], ["a medias", "A medias"], ["revisar", "Hay que revisarlo"], ["bien", "Bien"]]]] },
+  Equipo: { titulo: "Persona del equipo", campos: [["nombre", "Nombre", "texto"], ["rol", "Su papel", "texto", null, "Por ejemplo: escuchar a los clientes."]] }
+};
+const NUEVO_POR_DEFECTO = { Tareas: { para: "jefe", estado: "por hacer" }, Charlas: { quien_va: "jefe", estado: "por hacer" }, Legal: { estado: "revisar" }, Ideas: { estado: "guardada" } };
+
+function campoHtml([k, etiqueta, tipo, opciones, ayuda], valor) {
+  let control;
+  const v = valor === undefined || valor === null ? "" : valor;
+  if (tipo === "area") control = `<textarea class="texto" name="${k}">${esc(v)}</textarea>`;
+  else if (tipo === "opcion" || tipo === "persona" || tipo === "objetivo") {
+    const ops = tipo === "persona" ? OPCIONES_PERSONA() : tipo === "objetivo" ? [["", "Ninguno"]].concat(vivos("Objetivos").map((o) => [o.id, o.titulo])) : opciones;
+    control = `<select class="texto" name="${k}">${ops.map(([val, txt]) => `<option value="${esc(val)}"${String(val) === String(v) ? " selected" : ""}>${esc(txt)}</option>`).join("")}</select>`;
+  } else control = `<input class="texto" name="${k}" type="${tipo === "num" ? "text" : tipo === "fecha" ? "date" : "text"}"${tipo === "num" ? ' inputmode="decimal"' : ""} value="${esc(v)}">`;
+  return `<label class="campo"><span>${etiqueta}</span>${control}${ayuda ? `<small>${ayuda}</small>` : ""}</label>`;
+}
+
+function abrirFormulario(tabla, id, extra) {
+  const f = FORMULARIOS[tabla];
+  if (!esJefe() && id) {
+    // Alguien del equipo solo puede quitar sus propias quejas (no cambiarlas)
+    const q = vivos("Quejas").find((x) => x.id === id) || {};
+    $("#formulario").innerHTML = `<h3>Tu queja</h3><p>«${esc(q.texto)}»</p><div class="pie-dialogo"><button class="boton suave" type="button" data-cerrar>Cerrar</button><button class="quitar" type="button" data-quitar>Quitar</button></div>`;
+    $("[data-cerrar]", $("#formulario")).onclick = () => $("#dialogo").close();
+    $("[data-quitar]", $("#formulario")).onclick = () => { $("#dialogo").close(); quitar(tabla, id); };
+    $("#dialogo").showModal();
+    return;
+  }
+  const datos = id ? (vivos(tabla).find((x) => x.id === id) || {}) : Object.assign({}, NUEVO_POR_DEFECTO[tabla] || {}, extra || {});
+  const campos = esJefe() || tabla !== "Quejas" ? f.campos : f.campos.filter((c) => ["texto", "quien_lo_dijo", "donde", "apano"].indexOf(c[0]) !== -1);
+  $("#formulario").innerHTML = `<h3>${id ? f.titulo : "Nuevo: " + f.titulo.toLowerCase()}</h3>${campos.map((c) => campoHtml(c, datos[c[0]])).join("")}
+    <p class="error" id="error-form" role="alert"></p>
+    <div class="pie-dialogo"><button class="boton" value="guardar" type="submit">Guardar</button><button class="boton suave" type="button" data-cerrar>Cancelar</button>${id && tabla !== "Equipo" ? `<button class="quitar" type="button" data-quitar>Quitar</button>` : ""}</div>`;
+  $("#formulario").onsubmit = (e) => {
+    e.preventDefault();
+    const valores = {};
+    campos.forEach(([k]) => { valores[k] = $("#formulario").elements[k].value; });
+    const peticion = esJefe() ? { accion: "guardar", tabla: tabla, id: id || "", campos: valores } : { accion: "queja", campos: valores };
+    pedir(peticion).then((r) => {
+      if (!r.ok) { $("#error-form").textContent = textoError(r.error); return; }
+      $("#dialogo").close();
+      if (tabla === "Equipo" && r.codigo) mostrarCodigo(valores.nombre, r.codigo);
+    });
+  };
+  $("[data-cerrar]", $("#formulario")).onclick = () => $("#dialogo").close();
+  const q = $("[data-quitar]", $("#formulario"));
+  if (q) q.onclick = () => { $("#dialogo").close(); quitar(tabla, id); };
+  $("#dialogo").showModal();
+  const primero = $("input, textarea, select", $("#formulario"));
+  if (primero && !id) primero.focus();
+}
+
+function mostrarCodigo(nombre, codigo) {
+  $("#formulario").innerHTML = `<h3>Código de ${esc(nombre)}</h3><p class="sub">Dáselo en persona o por mensaje. Solo se ve ahora: apúntalo.</p>
+    <div class="codigo-grande">${esc(codigo)}</div><p class="sub">Entra en esta misma web, elige «Del equipo» y escribe el código.</p>
+    <div class="pie-dialogo"><button class="boton" type="button" data-cerrar>Ya lo tengo</button></div>`;
+  $("[data-cerrar]", $("#formulario")).onclick = () => $("#dialogo").close();
+  if (!$("#dialogo").open) $("#dialogo").showModal();
+}
+
+// Quitar con «Deshacer» durante 10 segundos
+let temporizador;
+function avisar(texto, boton, alPulsar) {
+  $("#aviso-texto").textContent = texto;
+  $("#aviso-boton").textContent = boton || "";
+  $("#aviso-boton").classList.toggle("oculto", !boton);
+  $("#aviso-boton").onclick = () => { $("#aviso").classList.add("oculto"); if (alPulsar) alPulsar(); };
+  $("#aviso").classList.remove("oculto");
+  clearTimeout(temporizador);
+  temporizador = setTimeout(() => $("#aviso").classList.add("oculto"), 10000);
+}
+function quitar(tabla, id) {
+  const jefe = esJefe();
+  pedir(jefe ? { accion: "quitar", tabla: tabla, id: id } : { accion: "quitar-queja", id: id }).then((r) => {
+    if (r.ok) avisar("Quitado.", "Deshacer", () => pedir(jefe ? { accion: "recuperar", tabla: tabla, id: id } : { accion: "recuperar-queja", id: id }));
+    else avisar(textoError(r.error));
+  });
+}
+
+// ---------- Clics ----------
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-v],[data-ir],[data-nuevo],[data-editar],[data-salir],[data-paso],[data-ajuste],[data-codigo],[data-tarea]");
+  if (!el || !estado) return;
+  if (el.dataset.v || el.dataset.ir) { vista = el.dataset.v || el.dataset.ir; pintar(); window.scrollTo(0, 0); }
+  else if (el.dataset.salir !== undefined) salir();
+  else if (el.dataset.nuevo) abrirFormulario(el.dataset.nuevo, "", el.dataset.extra ? JSON.parse(el.dataset.extra) : null);
+  else if (el.dataset.editar) abrirFormulario(el.dataset.editar, el.dataset.id);
+  else if (el.dataset.paso !== undefined) { pasoReunion = Number(el.dataset.paso) >= ORDEN_DEL_DIA.length ? 0 : Number(el.dataset.paso); pintar(); }
+  else if (el.dataset.ajuste) {
+    $("#formulario").innerHTML = `<h3>Día de la reunión</h3><label class="campo"><span>Día y hora</span><input class="texto" name="valor" maxlength="300" value="${esc((estado.ajustes || {}).REUNION)}" placeholder="Por ejemplo: sábados a las 11:00"></label>
+      <div class="pie-dialogo"><button class="boton" type="submit">Guardar</button><button class="boton suave" type="button" data-cerrar>Cancelar</button></div>`;
+    $("#formulario").onsubmit = (ev) => { ev.preventDefault(); pedir({ accion: "ajuste", nombre: "REUNION", valor: $("#formulario").elements.valor.value }).then(() => $("#dialogo").close()); };
+    $("[data-cerrar]", $("#formulario")).onclick = () => $("#dialogo").close();
+    $("#dialogo").showModal();
+  }
+  else if (el.dataset.codigo) {
+    const p = vivos("Equipo").find((x) => x.id === el.dataset.codigo);
+    if (confirm("¿Dar un código nuevo a " + p.nombre + "? El que tiene ahora dejará de valer.")) pedir({ accion: "codigo-nuevo", id: p.id }).then((r) => { if (r.ok) mostrarCodigo(p.nombre, r.codigo); });
+  }
+  else if (el.dataset.tarea) {
+    const accion = el.dataset.tarea, id = el.dataset.id;
+    if (accion === "hecha") {
+      const comentario = prompt("¿Quieres contar algo? (qué has visto, qué te ha costado…). Puedes dejarlo vacío.", "");
+      if (comentario === null) return;
+      pedir({ accion: "hecha", id: id, comentario: comentario }).then((r) => { if (r.ok) avisar("¡Hecha!", "Deshacer", () => pedir({ accion: "deshacer", id: id })); });
+    } else pedir({ accion: accion, id: id });
+  }
+});
+document.addEventListener("submit", (e) => {
+  if (e.target.id !== "apuntar-queja") return;
+  e.preventDefault();
+  const texto = $("#nueva-queja").value.trim();
+  if (!texto) return;
+  pedir(esJefe() ? { accion: "guardar", tabla: "Quejas", campos: { texto: texto, apuntada_por: "jefe" } } : { accion: "queja", campos: { texto: texto } })
+    .then((r) => { if (!r.ok) avisar(textoError(r.error)); });
+});
+
+// ---------- Al abrir ----------
+if ("serviceWorker" in navigator && location.protocol === "https:" && !MODO_DEMO) navigator.serviceWorker.register("sw.js").catch(() => {});
+const guardada = leerGuardada();
+if (guardada) {
+  sesion = guardada;
+  llamar({}).then((r) => { if (r.ok) { estado = r; abrirApp(); } else if (r.error === "red") { $("#error-entrada").textContent = textoError("red"); } else salir(); });
+}
+</script>
+</body>
+</html>
