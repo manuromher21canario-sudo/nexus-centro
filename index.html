@@ -308,6 +308,8 @@
 const API = "https://script.google.com/macros/s/AKfycbxs0aK0pZqaogvugnIvjMfvy3IBHnGeT80-2ybcZq2FEQfIYDDbBLnNcubrhFc1xiSM/exec";
 const MODO_DEMO = false;
 const GUARDADA = "nexus_sesion";
+// La hoja para elegir app (vive en el Escaparate; trae las 3 apps que se están comparando)
+const HOJA_PUNTUAR = "https://manuromher21canario-sudo.github.io/escaparate/elegir.html?apps=manitu,baul,nexus";
 
 const $ = (s, el) => (el || document).querySelector(s);
 const esc = (t) => String(t === null || t === undefined ? "" : t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -540,6 +542,9 @@ PANTALLAS.quejas = () => {
 PANTALLAS.ideas = () => {
   const ideas = vivos("Ideas").sort((a, b) => (Number(b.puntos) || -1) - (Number(a.puntos) || -1));
   return `<div class="cabeza"><div><h1>Ideas</h1><p>Puntuadas con las 8 preguntas, de 24 como máximo.</p></div></div>
+    <div class="panel" style="margin-bottom:22px"><h3>¿A qué nos dedicamos al 100 %?</h3>
+      <p>Cada uno puntúa las apps por su cuenta, sin mirar lo del otro. Al terminar, se envía la hoja a Emmanuel.</p>
+      <a class="boton" style="margin-top:14px;text-decoration:none" href="${HOJA_PUNTUAR}" target="_blank" rel="noopener">Abrir la hoja de puntuar</a></div>
     ${esJefe() ? `<div class="barra-acc">${botonNuevo("Ideas", "Nueva idea")}</div>` : ""}
     <div>${ideas.map((i) => `<div class="idea ${esJefe() ? "clic" : ""}" ${esJefe() ? `data-editar="Ideas" data-id="${i.id}"` : ""}><div><b>${esc(i.nombre)}</b><span>${esc(i.que_es)}</span>${i.para_quien ? `<span>Para: ${esc(i.para_quien)}</span>` : ""}${i.estado && i.estado !== "guardada" ? `<span>${etiquetaEstado(i.estado)}</span>` : ""}</div><div class="nota">${i.puntos === "" || i.puntos === undefined ? `<span style="color:var(--niebla)">—</span><small>sin puntuar</small>` : esc(i.puntos) + "<small>de 24</small>"}</div></div>`).join("")}</div>`;
 };
