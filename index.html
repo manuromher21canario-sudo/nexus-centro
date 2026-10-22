@@ -391,7 +391,7 @@ const claseDe = (id) => !id || id === "jefe" ? "s-e" : "s-a";
 const socio = (id) => `<span class="socio ${claseDe(id)}">${esc(nombreDe(id))}</span>`;
 const semana = () => Date.now() - 7 * 24 * 3600 * 1000;
 const PLAZOS = { corto: "Este mes", medio: "Este curso", largo: "En 2-3 años" };
-const COLOR_ESTADO = { "por hacer": "e-niebla", haciendo: "e-oro", hecha: "e-jade", esperando: "e-oro", arreglar: "e-coral", "a medias": "e-oro", revisar: "e-oro", bien: "e-jade", guardada: "e-niebla", elegida: "e-jade", "en pausa": "e-niebla", descartada: "e-coral" };
+const COLOR_ESTADO = { "por hacer": "e-niebla", haciendo: "e-oro", hecha: "e-jade", esperando: "e-oro", arreglar: "e-coral", "a medias": "e-oro", revisar: "e-oro", bien: "e-jade", propuesta: "e-lila", guardada: "e-niebla", elegida: "e-jade", "en pausa": "e-niebla", descartada: "e-coral" };
 const LUZ = { arreglar: "var(--coral)", "a medias": "var(--oro)", revisar: "var(--oro)", bien: "var(--jade)" };
 const may = (t) => t ? t.charAt(0).toUpperCase() + t.slice(1) : "";
 const etiquetaEstado = (e) => e ? `<span class="estado ${COLOR_ESTADO[e] || "e-niebla"}">${esc(may(e))}</span>` : "";
@@ -400,7 +400,7 @@ const botonNuevo = (tabla, texto, extra) => `<button class="boton peq" data-nuev
 
 // ---------- Menú ----------
 const MENU_JEFE = [["inicio", "Inicio"], ["objetivos", "Objetivos"], ["tareas", "Tareas"], ["dinero", "Dinero"], ["quejas", "Quejas"], ["ideas", "Ideas"], ["charlas", "Charlas"], ["reunion", "Reunión"], ["legal", "Legal"], ["equipo", "Equipo"]];
-const MENU_EQUIPO = [["inicio", "Mis tareas"], ["objetivos", "Objetivos"], ["quejas", "Quejas"], ["ideas", "Ideas"]];
+const MENU_EQUIPO = [["inicio", "Mis tareas"], ["objetivos", "Objetivos"], ["quejas", "Quejas"], ["charlas", "Charlas"], ["ideas", "Ideas"]];
 function pintarMenu() {
   const items = esJefe() ? MENU_JEFE : MENU_EQUIPO;
   $("#menu").innerHTML = `<div class="sello"><svg width="34" height="34"><use href="#sello"/></svg><b>Nexus</b></div>` +
@@ -545,8 +545,8 @@ PANTALLAS.ideas = () => {
     <div class="panel" style="margin-bottom:22px"><h3>¿A qué nos dedicamos al 100 %?</h3>
       <p>Cada uno puntúa las apps por su cuenta, sin mirar lo del otro. Al terminar, se envía la hoja a Emmanuel.</p>
       <a class="boton" style="margin-top:14px;text-decoration:none" href="${HOJA_PUNTUAR}" target="_blank" rel="noopener">Abrir la hoja de puntuar</a></div>
-    ${esJefe() ? `<div class="barra-acc">${botonNuevo("Ideas", "Nueva idea")}</div>` : ""}
-    <div>${ideas.map((i) => `<div class="idea ${esJefe() ? "clic" : ""}" ${esJefe() ? `data-editar="Ideas" data-id="${i.id}"` : ""}><div><b>${esc(i.nombre)}</b><span>${esc(i.que_es)}</span>${i.para_quien ? `<span>Para: ${esc(i.para_quien)}</span>` : ""}${i.estado && i.estado !== "guardada" ? `<span>${etiquetaEstado(i.estado)}</span>` : ""}</div><div class="nota">${i.puntos === "" || i.puntos === undefined ? `<span style="color:var(--niebla)">—</span><small>sin puntuar</small>` : esc(i.puntos) + "<small>de 24</small>"}</div></div>`).join("")}</div>`;
+    <div class="barra-acc">${botonNuevo("Ideas", esJefe() ? "Nueva idea" : "Proponer una idea")}</div>
+    <div>${ideas.map((i) => `<div class="idea ${esJefe() ? "clic" : ""}" ${esJefe() ? `data-editar="Ideas" data-id="${i.id}"` : ""}><div><b>${esc(i.nombre)}</b><span>${esc(i.que_es)}</span>${i.para_quien ? `<span>Para: ${esc(i.para_quien)}</span>` : ""}${i.estado === "propuesta" ? `<span><span class="estado e-lila">Propuesta de ${esc(nombreDe(i.propuesta_por))}</span></span>` : i.estado && i.estado !== "guardada" ? `<span>${etiquetaEstado(i.estado)}</span>` : ""}</div><div class="nota">${i.puntos === "" || i.puntos === undefined ? `<span style="color:var(--niebla)">—</span><small>sin puntuar</small>` : esc(i.puntos) + "<small>de 24</small>"}</div></div>`).join("")}</div>`;
 };
 
 PANTALLAS.charlas = () => {
@@ -555,7 +555,7 @@ PANTALLAS.charlas = () => {
   const grupo = (est, titulo) => { const suyas = charlas.filter((c) => (c.estado || "por hacer") === est); return suyas.length ? `<h2>${titulo}</h2><div class="lista">${suyas.map(fila).join("")}</div>` : ""; };
   return `<div class="cabeza"><div><h1>Charlas y visitas</h1><p>Para qué vamos antes, y qué nos llevamos después.</p></div></div>
     <div class="barra-acc">${botonNuevo("Charlas", "Nueva charla")}</div>
-    ${charlas.length ? grupo("por hacer", "Por hacer") + grupo("esperando", "Esperando respuesta") + grupo("hecha", "Hechas, y lo que nos llevamos") : vacio("No hay charlas apuntadas. La primera seguramente sea con la persona de la gestoría.")}`;
+    ${!esJefe() && !charlas.length ? vacio("Aquí van las charlas y visitas que haces tú. Antes de ir, apunta para qué. Después, lo que te dijeron.") : charlas.length ? grupo("por hacer", "Por hacer") + grupo("esperando", "Esperando respuesta") + grupo("hecha", "Hechas, y lo que nos llevamos") : vacio("No hay charlas apuntadas. La primera seguramente sea con la persona de la gestoría.")}`;
 };
 
 const ORDEN_DEL_DIA = [
@@ -618,12 +618,15 @@ const FORMULARIOS = {
   Tareas: { titulo: "Tarea", campos: [["titulo", "Qué hay que hacer", "texto"], ["para", "Quién la hace", "persona"], ["objetivo", "A qué objetivo ayuda", "objetivo"], ["estado", "Cómo va", "opcion", [["por hacer", "Por hacer"], ["haciendo", "Haciendo"], ["hecha", "Hecha"]]], ["para_cuando", "Para cuándo", "fecha"], ["porque", "Para qué sirve", "area", null, "Aray lo verá: le ayuda a entender por qué es importante."], ["como", "Cómo hacerlo, paso a paso", "area"]] },
   Dinero: { titulo: "Movimiento", campos: [["tipo", "Tipo", "opcion", [["ingreso", "Ha entrado"], ["gasto", "Ha salido"]]], ["concepto", "Qué es", "texto"], ["importe", "Cuánto (€)", "num"], ["quien", "Quién lo cobró o lo pagó", "texto"], ["recibo", "¿Hay recibo?", "opcion", [["", "No lo sé"], ["sí", "Sí"], ["no", "Todavía no"]]], ["dia", "Día", "fecha"]] },
   Quejas: { titulo: "Queja", campos: [["texto", "Lo que dijo, tal cual", "area"], ["quien_lo_dijo", "Quién lo dijo", "texto", null, "Sin apellidos ni teléfonos: basta con «una peluquera» o «mi tía»."], ["donde", "Dónde", "texto"], ["se_repite", "Veces que lo has oído", "num"], ["apano", "¿Ya tiene un apaño casero?", "opcion", [["", "No lo sé"], ["sí", "Sí"], ["no", "No"]]]] },
-  Ideas: { titulo: "Idea", campos: [["nombre", "Nombre", "texto"], ["que_es", "Qué es", "area"], ["para_quien", "Para quién", "texto"], ["puntos", "Puntos (de 24)", "num"], ["estado", "Estado", "opcion", [["guardada", "Guardada"], ["elegida", "Elegida"], ["en pausa", "En pausa"], ["descartada", "Descartada"]]], ["enlace", "Enlace (lienzo, prototipo…)", "texto"]] },
+  Ideas: { titulo: "Idea", campos: [["nombre", "Nombre", "texto"], ["que_es", "Qué es", "area"], ["para_quien", "Para quién", "texto"], ["puntos", "Puntos (de 24)", "num"], ["estado", "Estado", "opcion", [["propuesta", "Propuesta"], ["guardada", "Guardada"], ["elegida", "Elegida"], ["en pausa", "En pausa"], ["descartada", "Descartada"]]], ["enlace", "Enlace (lienzo, prototipo…)", "texto"]] },
   Charlas: { titulo: "Charla o visita", campos: [["con_quien", "Con quién", "texto"], ["para_que", "Para qué", "area"], ["como", "Cómo", "opcion", [["", "Sin decidir"], ["visita", "Visita"], ["llamada", "Llamada"], ["mensaje", "Mensaje"], ["en casa", "En casa"]]], ["cuando", "Cuándo", "fecha"], ["quien_va", "Quién va", "persona"], ["estado", "Cómo va", "opcion", [["por hacer", "Por hacer"], ["esperando", "Esperando respuesta"], ["hecha", "Hecha"]]], ["lo_que_nos_llevamos", "Lo que nos llevamos", "area", null, "Lo importante, con sus palabras."]] },
   Decisiones: { titulo: "Decisión", campos: [["texto", "Qué hemos decidido", "texto"], ["porque", "Por qué", "area"], ["quien", "Quién lo propuso", "texto"], ["dia", "Día", "fecha"]] },
   Legal: { titulo: "Asunto legal", campos: [["asunto", "Asunto", "texto"], ["detalle", "Qué falta o qué sabemos", "area"], ["estado", "Cómo está", "opcion", [["arreglar", "Hay que arreglarlo"], ["a medias", "A medias"], ["revisar", "Hay que revisarlo"], ["bien", "Bien"]]]] },
   Equipo: { titulo: "Persona del equipo", campos: [["nombre", "Nombre", "texto"], ["rol", "Su papel", "texto", null, "Por ejemplo: escuchar a los clientes."]] }
 };
+// Lo que puede rellenar alguien del equipo en cada sitio, y con qué acción del cerebro
+const CAMPOS_EQUIPO = { Quejas: ["texto", "quien_lo_dijo", "donde", "apano"], Charlas: ["con_quien", "para_que", "como", "cuando", "estado", "lo_que_nos_llevamos"], Ideas: ["nombre", "que_es", "para_quien"] };
+const ACCION_EQUIPO = { Quejas: "queja", Charlas: "charla", Ideas: "idea" };
 const NUEVO_POR_DEFECTO = { Tareas: { para: "jefe", estado: "por hacer" }, Charlas: { quien_va: "jefe", estado: "por hacer" }, Legal: { estado: "revisar" }, Ideas: { estado: "guardada" } };
 
 function campoHtml([k, etiqueta, tipo, opciones, ayuda], valor) {
@@ -639,7 +642,7 @@ function campoHtml([k, etiqueta, tipo, opciones, ayuda], valor) {
 
 function abrirFormulario(tabla, id, extra) {
   const f = FORMULARIOS[tabla];
-  if (!esJefe() && id) {
+  if (!esJefe() && id && tabla === "Quejas") {
     // Alguien del equipo solo puede quitar sus propias quejas (no cambiarlas)
     const q = vivos("Quejas").find((x) => x.id === id) || {};
     $("#formulario").innerHTML = `<h3>Tu queja</h3><p>«${esc(q.texto)}»</p><div class="pie-dialogo"><button class="boton suave" type="button" data-cerrar>Cerrar</button><button class="quitar" type="button" data-quitar>Quitar</button></div>`;
@@ -649,15 +652,15 @@ function abrirFormulario(tabla, id, extra) {
     return;
   }
   const datos = id ? (vivos(tabla).find((x) => x.id === id) || {}) : Object.assign({}, NUEVO_POR_DEFECTO[tabla] || {}, extra || {});
-  const campos = esJefe() || tabla !== "Quejas" ? f.campos : f.campos.filter((c) => ["texto", "quien_lo_dijo", "donde", "apano"].indexOf(c[0]) !== -1);
+  const campos = esJefe() ? f.campos : f.campos.filter((c) => (CAMPOS_EQUIPO[tabla] || []).indexOf(c[0]) !== -1);
   $("#formulario").innerHTML = `<h3>${id ? f.titulo : "Nuevo: " + f.titulo.toLowerCase()}</h3>${campos.map((c) => campoHtml(c, datos[c[0]])).join("")}
     <p class="error" id="error-form" role="alert"></p>
-    <div class="pie-dialogo"><button class="boton" value="guardar" type="submit">Guardar</button><button class="boton suave" type="button" data-cerrar>Cancelar</button>${id && tabla !== "Equipo" ? `<button class="quitar" type="button" data-quitar>Quitar</button>` : ""}</div>`;
+    <div class="pie-dialogo"><button class="boton" value="guardar" type="submit">Guardar</button><button class="boton suave" type="button" data-cerrar>Cancelar</button>${id && tabla !== "Equipo" && (esJefe() || tabla === "Charlas") ? `<button class="quitar" type="button" data-quitar>Quitar</button>` : ""}</div>`;
   $("#formulario").onsubmit = (e) => {
     e.preventDefault();
     const valores = {};
     campos.forEach(([k]) => { valores[k] = $("#formulario").elements[k].value; });
-    const peticion = esJefe() ? { accion: "guardar", tabla: tabla, id: id || "", campos: valores } : { accion: "queja", campos: valores };
+    const peticion = esJefe() ? { accion: "guardar", tabla: tabla, id: id || "", campos: valores } : { accion: ACCION_EQUIPO[tabla], id: id || "", campos: valores };
     pedir(peticion).then((r) => {
       if (!r.ok) { $("#error-form").textContent = textoError(r.error); return; }
       $("#dialogo").close();
@@ -693,8 +696,9 @@ function avisar(texto, boton, alPulsar) {
 }
 function quitar(tabla, id) {
   const jefe = esJefe();
-  pedir(jefe ? { accion: "quitar", tabla: tabla, id: id } : { accion: "quitar-queja", id: id }).then((r) => {
-    if (r.ok) avisar("Quitado.", "Deshacer", () => pedir(jefe ? { accion: "recuperar", tabla: tabla, id: id } : { accion: "recuperar-queja", id: id }));
+  const suf = tabla === "Charlas" ? "charla" : "queja";
+  pedir(jefe ? { accion: "quitar", tabla: tabla, id: id } : { accion: "quitar-" + suf, id: id }).then((r) => {
+    if (r.ok) avisar("Quitado.", "Deshacer", () => pedir(jefe ? { accion: "recuperar", tabla: tabla, id: id } : { accion: "recuperar-" + suf, id: id }));
     else avisar(textoError(r.error));
   });
 }
